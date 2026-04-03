@@ -83,47 +83,24 @@ app.get("/image-proxy", async (req, res) => {
     }
   }
 });
+let browser
 
 
-let browser;
-
-
-
-let browserLaunchPromise;
-
-async function getBrowser() {
-  if (!browser || !browser.isConnected()) {
-    if (!browserLaunchPromise) {
-      browserLaunchPromise = await puppeteer.launch({
-  headless: true,
-  args: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage',
-    '--disable-gpu',
-    '--single-process',
-    '--no-zygote'
-  ]
-})
-      .then(b => {
-        browser = b;
-        browserLaunchPromise = null;
-        return b;
-      })
-      .catch(err => {
-        console.error('❌ Puppeteer launch error:', err.message);
-        browserLaunchPromise = null;
-        throw err;
-      });
-    }
-    await browserLaunchPromise;
-  }
-  return browser;
+async function initBrowser() {
+  browser = await puppeteer.launch({
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage'
+    ]
+  })
 }
 
+await initBrowser()
+
 async function getPage() {
-  const b = await getBrowser();
-  const page = await b.newPage();
+  const page = await browser.newPage()
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36');
   await page.setViewport({ width: 1280, height: 800 });
   await page.setExtraHTTPHeaders({
