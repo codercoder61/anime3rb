@@ -118,7 +118,7 @@ async function getPage() {
   const page = await browser.newPage();
 
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36');
-
+  await page.setViewport({ width: 1280, height: 800 });
   await page.setExtraHTTPHeaders({
     'Accept-Language': 'en-US,en;q=0.9',
     'Referer': 'https://anime3rb.com/',
