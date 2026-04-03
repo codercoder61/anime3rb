@@ -2,9 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
 const axios = require('axios');
-const puppeteer = require('puppeteer-core')
-const chromium = require("@sparticuz/chromium");
+const puppeteer = require('puppeteer-extra')
+const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 chromium.setGraphicsMode = false;
+puppeteer.use(StealthPlugin())
 
 const viewport = {
     deviceScaleFactor: 1,
@@ -39,11 +40,14 @@ let browser
 
 async function startServer() {
   browser = await puppeteer.launch({
-    args: puppeteer.defaultArgs({ args: chromium.args, headless: "shell" }),
-    defaultViewport: viewport,
-    executablePath: await chromium.executablePath(),
-    headless: "shell",
-  })
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+  headless: true,
+  args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage'
+  ]
+})
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT}`)
