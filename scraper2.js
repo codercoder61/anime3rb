@@ -95,9 +95,9 @@ async function getBrowser() {
   if (!browser || !browser.isConnected()) {
     if (!browserLaunchPromise) {
       browserLaunchPromise = puppeteer.launch({
-  defaultViewport: puppeteer.defaultViewport,
+  executablePath: await chromium.executablePath(),
   headless: chromium.headless,
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
+  args: chromium.args
 })
       .then(b => {
         browser = b;
