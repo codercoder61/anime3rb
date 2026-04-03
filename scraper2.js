@@ -129,7 +129,7 @@ app.get('/getLatestAnimes', async (req, res) => {
   const url = `https://anime3rb.com?page=${pageNum}`;
   try {
     const page = await getPage();
-    await page.goto(url, , {
+    await page.goto(url, {
   waitUntil: 'domcontentloaded',
   timeout: 30000
 });
@@ -201,7 +201,7 @@ app.get('/getEpisodeSource', async (req, res) => {
 
   try {
     const page = await getPage();
-    await page.goto(episodeHref, , {
+    await page.goto(episodeHref, {
   waitUntil: 'domcontentloaded',
   timeout: 30000
 });
@@ -245,7 +245,7 @@ app.get('/getAnimeInfo', async (req, res) => {
   try {
     const url = `https://anime3rb.com/titles/${animeId}`;
     const page = await getPage();
-    await page.goto(url, , {
+    await page.goto(url, {
   waitUntil: 'domcontentloaded',
   timeout: 30000
 });
@@ -319,7 +319,7 @@ app.get('/getAnimeEpisodesInfo', async (req, res) => {
 
   try {
     const page = await getPage();
-    await page.goto(episodeHref, , {
+    await page.goto(episodeHref, {
   waitUntil: 'domcontentloaded',
   timeout: 30000
 });
