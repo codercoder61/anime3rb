@@ -31,30 +31,55 @@ app.use(cors());
 app.get("/image-proxy", async (req, res) => {
   try {
     const url = req.query.url;
-    if (!url) return res.status(400).send("url query param required");
 
-    const response = await fetch(url, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
-          "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
-          "Accept-Language": "en-US,en;q=0.9",
-          "Referer": "https://anime3rb.com/", // VERY IMPORTANT
-          "Connection": "keep-alive"
-        }
-      });
-
-    if (!response.ok) {
-      return res.status(response.status).send("Failed to fetch image");
+    if (!url) {
+      return res.status(400).send("url query param required");
     }
 
-    const contentType = response.headers.get("content-type") || "image/jpeg";
-    const buffer = Buffer.from(await response.arrayBuffer());
+    // Optional: basic validation (avoid SSRF attacks)
+    try {
+      new URL(url);
+    } catch {
+      return res.status(400).send("Invalid URL");
+    }
 
-    res.set("Content-Type", contentType);
-    res.set("Access-Control-Allow-Origin", "*"); // Allow any frontend to use
+    const response = await fetch(url, {
+      headers: {
+        // Simulate a real browser request
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+        "Accept":
+          "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://anime3rb.com/", // 🔥 critical for anti-hotlink protection
+        "Connection": "keep-alive"
+      }
+    });
+
+    if (!response.ok) {
+      console.error("Fetch failed:", response.status, response.statusText);
+      return res
+        .status(response.status)
+        .send(`Failed to fetch image: ${response.status}`);
+    }
+
+    const contentType =
+      response.headers.get("content-type") || "image/jpeg";
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Set headers
+    res.set({
+      "Content-Type": contentType,
+      "Content-Length": buffer.length,
+      "Access-Control-Allow-Origin": "*",
+      "Cache-Control": "public, max-age=86400" // cache for 1 day
+    });
+
     res.send(buffer);
   } catch (err) {
-    console.error(err);
+    console.error("Proxy error:", err);
     res.status(500).send("Server error");
   }
 });
