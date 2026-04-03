@@ -19,7 +19,7 @@ const pool = mysql.createPool({
 
 
 
-const puppeteer = require('puppeteer-extra');
+const puppeteer = require('puppeteer');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
 
@@ -63,7 +63,7 @@ app.listen(PORT, "0.0.0.0", async () => {
 
   try {
     browser = await puppeteer.launch({
-      headless: true,
+      headless: new,
       args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -90,7 +90,7 @@ async function getPage() {
   if (!browser || !browser.isConnected()) {
     if (!browserLaunchPromise) {
       browserLaunchPromise = puppeteer.launch({
-        headless: true,
+        headless: new,
         args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
