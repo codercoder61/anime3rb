@@ -10,7 +10,9 @@ const pool = mysql.createPool({
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
   database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT,
+  port: Number(process.env.MYSQLPORT),  // ✅ convert to number
+  waitForConnections: true,
+  connectionLimit: 10,
 });
 
 
@@ -304,23 +306,20 @@ app.get('/getAnimeEpisodesInfo', async (req, res) => {
 
 
 app.get('/search', async (req, res) => {
-  if (!browser) {
-    return res.status(503).json({ error: 'Puppeteer browser not initialized yet' });
-  }
-
+  if (!browser) return res.status(503).json({ error: 'Puppeteer not ready' });
   const q = req.query.q;
   if (!q) return res.status(400).json({ error: 'q is required' });
 
   try {
-    const [rows] = await pool.query(
+    const conn = await pool.getConnection();
+    const [rows] = await conn.query(
       "SELECT * FROM animelist WHERE title LIKE ? LIMIT 50",
       [`%${q}%`]
     );
-
+    conn.release();
     res.json(rows);
-
   } catch (err) {
-    console.error('❌ Error fetching data:', err);
+    console.error('❌ MySQL error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -494,6 +493,13 @@ process.on('SIGINT', async () => {
 // }
 // });
 
-
+app.get('/test-db', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT 1+1 AS result');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 
