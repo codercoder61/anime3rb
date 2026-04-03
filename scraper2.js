@@ -63,7 +63,8 @@ app.listen(PORT, "0.0.0.0", async () => {
 
   try {
     browser = await puppeteer.launch({
-      headless: 'new',
+      headless: true,
+      executablePath: process.env.CHROME_PATH || undefined,
       args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -90,7 +91,8 @@ async function getPage() {
   if (!browser || !browser.isConnected()) {
     if (!browserLaunchPromise) {
       browserLaunchPromise = puppeteer.launch({
-        headless: 'new',
+        headless: true,
+        executablePath: process.env.CHROME_PATH || undefined,
         args: [
      '--no-sandbox',
       '--disable-setuid-sandbox',
