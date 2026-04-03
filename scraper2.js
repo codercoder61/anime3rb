@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
+const axios = require('axios');
+
 let connection;
 
 
@@ -31,56 +33,49 @@ app.use(cors());
 app.get("/image-proxy", async (req, res) => {
   try {
     const url = req.query.url;
+    if (!url) return res.status(400).send("url query param required");
 
-    if (!url) {
-      return res.status(400).send("url query param required");
-    }
-
-    // Optional: basic validation (avoid SSRF attacks)
+    // Basic URL validation
     try {
       new URL(url);
     } catch {
       return res.status(400).send("Invalid URL");
     }
 
-    const response = await fetch(url, {
+    // Fetch image with browser-like headers
+    const response = await axios.get(url, {
+      responseType: 'arraybuffer',
       headers: {
-        // Simulate a real browser request
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
-        "Accept":
-          "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Referer": "https://anime3rb.com/", // 🔥 critical for anti-hotlink protection
-        "Connection": "keep-alive"
-      }
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
+        'Accept':
+          'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Referer': 'https://anime3rb.com/',
+        'Connection': 'keep-alive'
+      },
+      timeout: 10000 // 10 seconds
     });
 
-    if (!response.ok) {
-      console.error("Fetch failed:", response.status, response.statusText);
-      return res
-        .status(response.status)
-        .send(`Failed to fetch image: ${response.status}`);
-    }
+    const contentType = response.headers['content-type'] || 'image/jpeg';
+    const buffer = Buffer.from(response.data, 'binary');
 
-    const contentType =
-      response.headers.get("content-type") || "image/jpeg";
-
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Set headers
     res.set({
       "Content-Type": contentType,
       "Content-Length": buffer.length,
       "Access-Control-Allow-Origin": "*",
-      "Cache-Control": "public, max-age=86400" // cache for 1 day
+      "Cache-Control": "public, max-age=86400" // cache 1 day
     });
 
     res.send(buffer);
+
   } catch (err) {
-    console.error("Proxy error:", err);
-    res.status(500).send("Server error");
+    console.error('Image proxy error:', err.message);
+    if (err.response) {
+      res.status(err.response.status).send(`Failed to fetch image: ${err.response.status}`);
+    } else {
+      res.status(500).send("Server error fetching image");
+    }
   }
 });
 
