@@ -96,7 +96,6 @@ async function getBrowser() {
     if (!browserLaunchPromise) {
       browserLaunchPromise = puppeteer.launch({
   defaultViewport: puppeteer.defaultViewport,
-  executablePath: puppeteer.executablePath(),
   headless: chromium.headless,
   args: ['--no-sandbox', '--disable-setuid-sandbox']
 })
