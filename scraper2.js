@@ -3,7 +3,7 @@ const cors = require('cors');
 const mysql = require('mysql2/promise');
 const axios = require('axios');
 const chromium = require('chrome-aws-lambda');
-const puppeteer = require('puppeteer-extra');
+const puppeteer = require('puppeteer-core')
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 
 puppeteer.use(StealthPlugin());
@@ -27,10 +27,26 @@ let connection;
 
 
 
+let browser
 
 
 
+async function startServer() {
+  browser = await puppeteer.launch({
+    executablePath: await chromium.executablePath,
+    headless: chromium.headless,
+    args: chromium.args
+  })
 
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT}`)
+  })
+}
+
+startServer().catch(err => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
+});
 
 
 
@@ -83,21 +99,8 @@ app.get("/image-proxy", async (req, res) => {
     }
   }
 });
-let browser
 
 
-async function initBrowser() {
-  browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage'
-    ]
-  })
-}
-
-await initBrowser()
 
 async function getPage() {
   const page = await browser.newPage()
@@ -126,7 +129,10 @@ app.get('/getLatestAnimes', async (req, res) => {
   const url = `https://anime3rb.com?page=${pageNum}`;
   try {
     const page = await getPage();
-    await page.goto(url, { timeout: 0 });
+    await page.goto(url, , {
+  waitUntil: 'domcontentloaded',
+  timeout: 30000
+});
     // Evaluate inside page context
     await new Promise(resolve => setTimeout(resolve, 3000));
 
@@ -166,7 +172,9 @@ app.get('/getLatestAnimes', async (req, res) => {
     res.json({ animeList });
   } catch (error) {
     res.status(500).json({ error: error.message });
-  }
+  } finally {
+  if (page) await page.close()
+}
 });
 // GET episode source
 app.get('/', async (req, res) => {
@@ -193,7 +201,10 @@ app.get('/getEpisodeSource', async (req, res) => {
 
   try {
     const page = await getPage();
-    await page.goto(episodeHref, { waitUntil: 'domcontentloaded' });
+    await page.goto(episodeHref, , {
+  waitUntil: 'domcontentloaded',
+  timeout: 30000
+});
 
     // Wait for the iframe containing the video to load
     await page.waitForSelector('iframe', { timeout: 0 });
@@ -217,7 +228,9 @@ app.get('/getEpisodeSource', async (req, res) => {
     res.json({ episodeSrc });
   } catch (error) {
     res.status(500).json({ error: error.message });
-  }
+  } finally {
+  if (page) await page.close()
+}
 });
 
 
@@ -232,7 +245,10 @@ app.get('/getAnimeInfo', async (req, res) => {
   try {
     const url = `https://anime3rb.com/titles/${animeId}`;
     const page = await getPage();
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
+    await page.goto(url, , {
+  waitUntil: 'domcontentloaded',
+  timeout: 30000
+});
 
     const animeInfo = await page.evaluate(() => {
       const getText = (selector) => {
@@ -286,7 +302,9 @@ directorEls.forEach(el => {
 
   } catch (error) {
     res.status(500).json({ error: error.message });
-  }
+  } finally {
+  if (page) await page.close()
+}
 });
 
 
@@ -301,7 +319,10 @@ app.get('/getAnimeEpisodesInfo', async (req, res) => {
 
   try {
     const page = await getPage();
-    await page.goto(episodeHref, { waitUntil: 'domcontentloaded' });
+    await page.goto(episodeHref, , {
+  waitUntil: 'domcontentloaded',
+  timeout: 30000
+});
 
     const animeList = await page.evaluate(() => {
       const list = [];
@@ -324,7 +345,9 @@ app.get('/getAnimeEpisodesInfo', async (req, res) => {
     res.json({ animeList });
   } catch (error) {
     res.status(500).json({ error: error.message });
-  }
+  } finally {
+  if (page) await page.close()
+}
 });
 
 
@@ -367,9 +390,7 @@ process.on('SIGTERM', async () => {
 // --------------------
 // Start server
 // --------------------
-app.listen(PORT, "0.0.0.0", async () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
 
 app.get('/test-db', async (req, res) => {
   try {
