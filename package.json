@@ -15,9 +15,11 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "mysql2": "^3.16.3",
-    "chrome-aws-lambda": "^10.1.0",
     "puppeteer-core": "^10.4.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "devDependencies": {
+    "@sparticuz/chromium": "^143.0.4"
   }
 }
