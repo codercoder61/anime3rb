@@ -29,13 +29,30 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 
 app.get("/image-proxy", async (req, res) => {
-  const url = req.query.url;
-  const response = await fetch(url);
-  const buffer = Buffer.from(await response.arrayBuffer());
+  try {
+    const url = req.query.url;
+    if (!url) return res.status(400).send("url query param required");
 
-  res.set("Content-Type", response.headers.get("content-type"));
-  res.set("Access-Control-Allow-Origin", "*");
-  res.send(buffer);
+    const response = await fetch(url, { 
+      headers: {
+        "User-Agent": "Mozilla/5.0" // Some servers block default fetch UA
+      }
+    });
+
+    if (!response.ok) {
+      return res.status(response.status).send("Failed to fetch image");
+    }
+
+    const contentType = response.headers.get("content-type") || "image/jpeg";
+    const buffer = Buffer.from(await response.arrayBuffer());
+
+    res.set("Content-Type", contentType);
+    res.set("Access-Control-Allow-Origin", "*"); // Allow any frontend to use
+    res.send(buffer);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
 });
 
 
