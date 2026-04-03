@@ -3,11 +3,16 @@ const cors = require('cors');
 const mysql = require('mysql2/promise');
 const axios = require('axios');
 const chromium = require('chrome-aws-lambda');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 
-let connection;
+puppeteer.use(StealthPlugin());
 
 
+const app = express();
+app.use(cors());
 
+const PORT = process.env.PORT || 3000;
 const pool = mysql.createPool({
   host: process.env.MYSQLHOST,
   user: process.env.MYSQLUSER,
@@ -18,18 +23,17 @@ const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
+let connection;
 
 
 
 
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-puppeteer.use(StealthPlugin());
 
-const app = express();
-const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+
+
+
+
 
 app.get("/image-proxy", async (req, res) => {
   try {
@@ -83,45 +87,51 @@ app.get("/image-proxy", async (req, res) => {
 
 let browser;
 
-app.listen(PORT, "0.0.0.0", async () => {
-  console.log(`Server running on port ${PORT}`);
-});
 
 
-// Helper to open a new page with common setup
+let browser;
 let browserLaunchPromise;
 
-async function getPage() {
+async function getBrowser() {
   if (!browser || !browser.isConnected()) {
     if (!browserLaunchPromise) {
       browserLaunchPromise = puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath, // ✅ Chromium provided by chrome-aws-lambda
-    headless: chromium.headless,
-  }).then(b => {
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath,
+        headless: chromium.headless,
+      })
+      .then(b => {
         browser = b;
-        browserLaunchPromise = null;  // reset once done
+        browserLaunchPromise = null;
         return b;
-      }).catch(err => {
-        browserLaunchPromise = null;  // reset on failure to allow retry
+      })
+      .catch(err => {
+        console.error('❌ Puppeteer launch error:', err.message);
+        browserLaunchPromise = null;
         throw err;
       });
     }
     await browserLaunchPromise;
   }
+  return browser;
+}
 
-  const page = await browser.newPage();
-
+async function getPage() {
+  const b = await getBrowser();
+  const page = await b.newPage();
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36');
   await page.setViewport({ width: 1280, height: 800 });
   await page.setExtraHTTPHeaders({
     'Accept-Language': 'en-US,en;q=0.9',
     'Referer': 'https://anime3rb.com/',
   });
-
   return page;
 }
+
+// --------------------
+// Routes
+// --------------------
 
 
 
@@ -359,171 +369,26 @@ app.get('/search', async (req, res) => {
 
 
 
+// Graceful shutdown
+// --------------------
 process.on('SIGINT', async () => {
   console.log('Shutting down...');
   if (browser) await browser.close();
   process.exit();
 });
 
+process.on('SIGTERM', async () => {
+  console.log('Shutting down...');
+  if (browser) await browser.close();
+  process.exit();
+});
 
-// let genres = [
-//   "historical",
-//   "slice-of-life",
-//   "mecha",
-//   "super-power",
-//   "harem",
-//   "military",
-//   "sports",
-//   "suspense",
-//   "isekai",
-//   "shoujo",
-//   "mythology",
-//   "psychological",
-//   "horror",
-//   "music",
-//   "gore",
-//   "martial-arts",
-//   "parody",
-//   "detective",
-//   "space",
-//   "award-winning",
-//   "cgdct",
-//   "team-sports",
-//   "kids",
-//   "gag-humor",
-//   "iyashikei",
-//   "urban-fantasy",
-//   "workplace",
-//   "vampire",
-//   "samurai",
-//   "anthropomorphic",
-//   "mahou-shoujo",
-//   "reincarnation",
-//   "josei",
-//   "time-travel",
-//   "strategy-game",
-//   "love-polygon",
-//   "otaku-culture",
-//   "organized-crime",
-//   "idols-female",
-//   "gourmet",
-//   "video-game",
-//   "survival",
-//   "racing",
-//   "performing-arts",
-//   "girls-love",
-//   "avant-garde",
-//   "reverse-harem",
-//   "combat-sports",
-//   "childcare",
-//   "visual-arts",
-//   "love-status-quo",
-//   "high-stakes-game",
-//   "delinquents",
-//   "idols-male",
-//   "pets",
-//   "medical",
-//   "crossdressing",
-//   "boys-love",
-//   "magical-sex-shift",
-//   "showbiz",
-//   "erotica",
-//   "villainess",
-//   "educational"
-// ]
-
-// app.get('/fetch-animes', async (req, res) => {
-//   if (!browser) {
-//     return res.status(503).json({ error: 'Puppeteer browser not initialized yet' });
-//   }
-//   let animeList = [];
-
-//   try {
-//     const puppetPage = await getPage(); // rename to avoid conflict
-
-//     for (const genre of genres) {
-//       let pageNumber = 1;
-//       let hasNext = true;
-//       console.log(`Fetching genre: ${genre}`);
-
-//       while (hasNext) {
-//         console.log(`Fetching page: ${pageNumber}`);
-
-//         await puppetPage.goto(`https://anime3rb.com/genre/${genre}?page=${pageNumber}`, {
-//           waitUntil: 'networkidle2',
-//         });
-
-//         // 👇 Scraping data
-//         const list = await puppetPage.evaluate(() => {
-//           return Array.from(
-//             document.querySelectorAll('div.titles-list > div')
-//           ).map(el => {
-//             const poster = el.querySelector(
-//               'div > a.btn.btn-md.btn-plain.w-full > img'
-//             )?.src || null;
-
-//             const title = el.querySelector(
-//               'div > a.btn.btn-md.btn-plain.w-full > h2'
-//             )?.textContent.trim() || null;
-
-//             const href = el.querySelector(
-//               'div > a.btn.btn-md.btn-plain.w-full'
-//             )?.href || null;
-
-//             const animeId = href ? href.split('/').pop() : null;
-
-//             return { animeId, poster, title };
-//           });
-//         });
-
-//         animeList.push(...list);
-
-//         // Bulk insert
-//         const values = list
-//           .filter(a => a.animeId)
-//           .map(a => [a.animeId, a.poster, a.title]);
-
-//         if (values.length) {
-//           await connection.query(
-//             `INSERT IGNORE INTO animelist (animeId, poster, title) VALUES ?`,
-//             [values]
-//           );
-//         }
-
-//         // 👇 Check if next page exists (inside browser context)
-//         hasNext = await puppetPage.evaluate(async () => {
-//         // Wait for up to 3 seconds for the button to appear
-//         const waitForButton = (selector, timeout = 3000) => {
-//           return new Promise(resolve => {
-//             const start = Date.now();
-//             const interval = setInterval(() => {
-//               const btn = document.querySelector(selector);
-//               if (btn) {
-//                 clearInterval(interval);
-//                 resolve(btn);
-//               } else if (Date.now() - start > timeout) {
-//                 clearInterval(interval);
-//                 resolve(null); // Timeout, button not found
-//               }
-//             }, 5000);
-//           });
-//         };
-
-//         const nextButton = await waitForButton('[aria-label="التالي"]');
-//         return nextButton && !nextButton.disabled;
-//         });
-
-
-//         pageNumber += 1;
-//       }
-//     }
-
-//     res.json({ count: animeList.length });
-// } catch (error) {
-//   console.error(error);
-//   res.status(500).json({ error: error.message });
-// }
-// });
+// --------------------
+// Start server
+// --------------------
+app.listen(PORT, "0.0.0.0", async () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 app.get('/test-db', async (req, res) => {
   try {
