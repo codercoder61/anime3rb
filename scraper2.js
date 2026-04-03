@@ -85,19 +85,6 @@ let browser;
 
 app.listen(PORT, "0.0.0.0", async () => {
   console.log(`Server running on port ${PORT}`);
-
-  try {
-    browser = await puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath, // ✅ Chromium provided by chrome-aws-lambda
-    headless: chromium.headless,
-  });
-
-    console.log('✅ Puppeteer browser launched');
-  } catch (err) {
-    console.error('❌ Puppeteer failed:', err);
-  }
 });
 
 
@@ -352,7 +339,6 @@ app.get('/getAnimeEpisodesInfo', async (req, res) => {
 
 
 app.get('/search', async (req, res) => {
-  if (!browser) return res.status(503).json({ error: 'Puppeteer not ready' });
   const q = req.query.q;
   if (!q) return res.status(400).json({ error: 'q is required' });
 
