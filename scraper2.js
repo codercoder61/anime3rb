@@ -44,7 +44,6 @@ let browser;
   try {
     browser = await puppeteer.launch({
   headless: true,
-  executablePath: process.env.CHROME_BIN,  // ✅ only this
   args: ['--no-sandbox', '--disable-setuid-sandbox'],
 });
 
