@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "scraper2.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+      "start": "node scraper2.js",
+      "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
