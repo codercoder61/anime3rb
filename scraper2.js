@@ -29,14 +29,15 @@ let browser;
 // --------------------
 async function startServer() {
   browser = await puppeteer.launch({
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage'
-    ]
-  });
+  headless: 'new', // ✅ important
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+  args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-blink-features=AutomationControlled'
+  ]
+})
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT}`);
@@ -53,7 +54,11 @@ startServer().catch(err => {
 // --------------------
 async function getPage() {
   const page = await browser.newPage();
-
+  await page.evaluateOnNewDocument(() => {
+    Object.defineProperty(navigator, 'webdriver', {
+      get: () => false,
+    });
+});
   await page.setUserAgent(
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36'
   );
@@ -136,7 +141,7 @@ app.get('/getEpisodeSource', async (req, res) => {
 
     page = await getPage();
 
-    await page.goto(episodeHref, { waitUntil: 'networkidle2' });
+    await page.goto(episodeHref, { waitUntil: 'networkidle2', timeout: 30000 });
     await page.waitForSelector('iframe', { timeout: 10000 });
 
     const iframe = await (await page.$('iframe')).contentFrame();
@@ -169,7 +174,7 @@ app.get('/getAnimeInfo', async (req, res) => {
     const url = `https://anime3rb.com/titles/${animeId}`;
     page = await getPage();
 
-    await page.goto(url, { waitUntil: 'networkidle2' });
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
     await page.waitForSelector('h1', { timeout: 10000 });
 
     const animeInfo = await page.evaluate(() => {
