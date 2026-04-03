@@ -94,7 +94,7 @@ let browserLaunchPromise;
 async function getBrowser() {
   if (!browser || !browser.isConnected()) {
     if (!browserLaunchPromise) {
-      browserLaunchPromise = puppeteer.launch({
+      browserLaunchPromise = await puppeteer.launch({
   headless: true,
   args: [
     '--no-sandbox',
