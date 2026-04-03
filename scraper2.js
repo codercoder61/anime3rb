@@ -96,11 +96,13 @@ async function getBrowser() {
     if (!browserLaunchPromise) {
       browserLaunchPromise = puppeteer.launch({
   headless: true,
-  executablePath: puppeteer.executablePath(),
   args: [
     '--no-sandbox',
     '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage'
+    '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--single-process',
+    '--no-zygote'
   ]
 })
       .then(b => {
