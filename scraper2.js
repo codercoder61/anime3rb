@@ -93,6 +93,7 @@ async function getPage() {
 
 
 // GET latest animes
+// GET latest animes
 app.get('/getLatestAnimes', async (req, res) => {
   if (!browser) {
     return res.status(503).json({ error: 'Puppeteer browser not initialized yet' });
@@ -159,7 +160,6 @@ app.get('/', async (req, res) => {
 
 
 
-// GET episode source
 app.get('/getEpisodeSource', async (req, res) => {
   if (!browser) {
     return res.status(503).json({ error: 'Puppeteer browser not initialized yet' });
