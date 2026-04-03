@@ -6,7 +6,14 @@ const puppeteer = require('puppeteer-core')
 const chromium = require("@sparticuz/chromium");
 chromium.setGraphicsMode = false;
 
-
+const viewport = {
+    deviceScaleFactor: 1,
+    hasTouch: false,
+    height: 1080,
+    isLandscape: true,
+    isMobile: false,
+    width: 1920,
+  };
 
 const app = express();
 app.use(cors());
