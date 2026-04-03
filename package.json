@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "main": "scraper2.js",
   "scripts": {
-      "start": "node scraper2.js",
-      "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -17,8 +16,7 @@
     "express": "^5.1.0",
     "mysql2": "^3.16.3",
     "node-fetch": "^3.3.2",
-    "puppeteer": "^24.17.0",
-    "puppeteer-core": "^24.40.0",
+    "puppeteer-core": "^10.4.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2"
   }
