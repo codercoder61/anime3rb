@@ -4,17 +4,9 @@ const mysql = require('mysql2/promise');
 const axios = require('axios');
 const puppeteer = require('puppeteer-extra')
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
-chromium.setGraphicsMode = false;
 puppeteer.use(StealthPlugin())
 
-const viewport = {
-    deviceScaleFactor: 1,
-    hasTouch: false,
-    height: 1080,
-    isLandscape: true,
-    isMobile: false,
-    width: 1920,
-  };
+
 
 const app = express();
 app.use(cors());
@@ -30,7 +22,6 @@ const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
-let connection;
 
 
 
