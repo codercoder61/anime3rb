@@ -89,7 +89,6 @@ let browser;
 
 
 
-let browser;
 let browserLaunchPromise;
 
 async function getBrowser() {
