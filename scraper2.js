@@ -2,9 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
 const axios = require('axios');
-const chromium = require('chrome-aws-lambda');
 const puppeteer = require('puppeteer-core')
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const chromium = require("@sparticuz/chromium");
+chromium.setGraphicsMode = false;
 
 
 
@@ -32,9 +32,10 @@ let browser
 
 async function startServer() {
   browser = await puppeteer.launch({
-    executablePath: await chromium.executablePath,
-    headless: chromium.headless,
-    args: chromium.args
+    args: puppeteer.defaultArgs({ args: chromium.args, headless: "shell" }),
+    defaultViewport: viewport,
+    executablePath: await chromium.executablePath(),
+    headless: "shell",
   })
 
   app.listen(PORT, "0.0.0.0", () => {
