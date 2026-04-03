@@ -140,7 +140,11 @@ app.get('/getEpisodeSource', async (req, res) => {
     if (!episodeHref) return res.status(400).json({ error: 'episodeHref required' });
 
     page = await getPage();
-
+    const html = await page.content();
+    
+    if (html.includes('security service') || html.includes('cf-challenge')) {
+      console.log('🚫 BLOCKED BY CLOUDFLARE');
+    }
     await page.goto(episodeHref, { waitUntil: 'networkidle2', timeout: 30000 });
     await page.waitForSelector('iframe', { timeout: 10000 });
 
@@ -173,7 +177,11 @@ app.get('/getAnimeInfo', async (req, res) => {
 
     const url = `https://anime3rb.com/titles/${animeId}`;
     page = await getPage();
-
+    const html = await page.content();
+    
+    if (html.includes('security service') || html.includes('cf-challenge')) {
+      console.log('🚫 BLOCKED BY CLOUDFLARE');
+    }
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
     await page.waitForSelector('h1', { timeout: 10000 });
 
@@ -226,7 +234,11 @@ app.get('/getAnimeEpisodesInfo', async (req, res) => {
     }
 
     page = await getPage();
+  const html = await page.content();
 
+if (html.includes('security service') || html.includes('cf-challenge')) {
+  console.log('🚫 BLOCKED BY CLOUDFLARE');
+}
     await page.goto(episodeHref, {
       waitUntil: 'networkidle2',
       timeout: 30000
