@@ -200,30 +200,56 @@ app.get('/getAnimeInfo', async (req, res) => {
 // Episodes List
 // --------------------
 app.get('/getAnimeEpisodesInfo', async (req, res) => {
-  if (!browser) return res.status(503).json({ error: 'Browser not ready' });
+  if (!browser) {
+    return res.status(503).json({ error: 'Puppeteer browser not initialized yet' });
+  }
+
+  let episodeHref = req.query.episodeHref;
+  if (!episodeHref) {
+    return res.status(400).json({ error: 'episodeHref is required' });
+  }
 
   let page;
+
   try {
-    const episodeHref = req.query.episodeHref;
-    if (!episodeHref) return res.status(400).json({ error: 'episodeHref required' });
+    // 🔥 Convert episode URL → anime page URL
+    if (episodeHref.includes('/episode/')) {
+      const parts = episodeHref.split('/');
+      const animeSlug = parts[parts.length - 2]; // kimetsu-no-yaiba
+
+      episodeHref = `https://anime3rb.com/titles/${animeSlug}`;
+    }
 
     page = await getPage();
 
-    await page.goto(episodeHref, { waitUntil: 'networkidle2' });
+    await page.goto(episodeHref, {
+      waitUntil: 'networkidle2',
+      timeout: 30000
+    });
 
-    await page.waitForSelector('div.video-list a', { timeout: 10000 });
+    // ✅ Wait properly (NO more timeout issue)
+    await page.waitForSelector('div.video-list a', { timeout: 15000 });
 
     const animeList = await page.evaluate(() => {
       const list = [];
-      let i = 0;
+      let animeIdx = 0;
 
       document.querySelectorAll('div.video-list a').forEach(el => {
-        i++;
+        const episodeNameEl = el.querySelector('div.video-data span');
+        const episodeName = episodeNameEl ? episodeNameEl.textContent.trim() : '';
+
+        const href = el.href;
+
+        const episodeDescEl = el.querySelector('div.video-data > p');
+        const episodeDesc = episodeDescEl ? episodeDescEl.textContent.trim() : '';
+
+        animeIdx++;
+
         list.push({
-          episodeName: el.querySelector('span')?.textContent.trim() || '',
-          episodeHref: el.href,
-          episodeDesc: el.querySelector('p')?.textContent.trim() || '',
-          animeIdx: i
+          episodeName,
+          episodeHref: href,
+          episodeDesc,
+          animeIdx
         });
       });
 
@@ -232,9 +258,9 @@ app.get('/getAnimeEpisodesInfo', async (req, res) => {
 
     res.json({ animeList });
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
   } finally {
     if (page) await page.close();
   }
