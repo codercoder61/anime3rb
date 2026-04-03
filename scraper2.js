@@ -90,7 +90,7 @@ app.listen(PORT, "0.0.0.0", async () => {
     browser = await puppeteer.launch({
     args: chromium.args,
     defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath,
+    executablePath: await chromium.executablePath, // ✅ Chromium provided by chrome-aws-lambda
     headless: chromium.headless,
   });
 
@@ -108,11 +108,11 @@ async function getPage() {
   if (!browser || !browser.isConnected()) {
     if (!browserLaunchPromise) {
       browserLaunchPromise = puppeteer.launch({
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath,
-        headless: chromium.headless,
-      }).then(b => {
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath, // ✅ Chromium provided by chrome-aws-lambda
+    headless: chromium.headless,
+  }).then(b => {
         browser = b;
         browserLaunchPromise = null;  // reset once done
         return b;
