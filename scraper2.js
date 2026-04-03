@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
 const axios = require('axios');
+const chromium = require('chrome-aws-lambda');
 
 let connection;
 
@@ -21,7 +22,7 @@ const pool = mysql.createPool({
 
 
 
-const puppeteer = require('puppeteer-extra');
+const puppeteer = require('puppeteer-core');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
 
@@ -115,18 +116,10 @@ async function getPage() {
   if (!browser || !browser.isConnected()) {
     if (!browserLaunchPromise) {
       browserLaunchPromise = puppeteer.launch({
-        headless: true,
-        executablePath: process.env.CHROME_PATH || undefined,
-        args: [
-     '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
-      '--single-process',
-      '--disable-gpu'
-    ],
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath,
+        headless: chromium.headless,
       }).then(b => {
         browser = b;
         browserLaunchPromise = null;  // reset once done
@@ -560,6 +553,15 @@ app.get('/test-db', async (req, res) => {
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/test-fetch', async (req, res) => {
+  try {
+    const response = await fetch('https://anime3rb.com');
+    res.send(`Status: ${response.status}`);
+  } catch (err) {
+    res.send(`Error: ${err.message}`);
   }
 });
 
