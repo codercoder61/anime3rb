@@ -206,7 +206,7 @@ app.get('/getEpisodeSource', async (req, res) => {
 
   try {
     const page = await getPage();
-    await page.goto(episodeHref, { waitUntil: 'networkidle2' });
+    await page.goto(episodeHref, { waitUntil: 'domcontentloaded' });
 
     // Wait for the iframe containing the video to load
     await page.waitForSelector('iframe', { timeout: 0 });
@@ -245,7 +245,7 @@ app.get('/getAnimeInfo', async (req, res) => {
   try {
     const url = `https://anime3rb.com/titles/${animeId}`;
     const page = await getPage();
-    await page.goto(url, { waitUntil: 'networkidle2' });
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
 
     const animeInfo = await page.evaluate(() => {
       const getText = (selector) => {
@@ -314,7 +314,7 @@ app.get('/getAnimeEpisodesInfo', async (req, res) => {
 
   try {
     const page = await getPage();
-    await page.goto(episodeHref, { waitUntil: 'networkidle2' });
+    await page.goto(episodeHref, { waitUntil: 'domcontentloaded' });
 
     const animeList = await page.evaluate(() => {
       const list = [];
