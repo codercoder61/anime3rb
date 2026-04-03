@@ -1,0 +1,15 @@
+{
+  "name": "anime Node.js Scraper",
+  "description": "A Node.js scraper for anime",
+  "repository": "https://github.com/codercoder61/anime_api",
+  "keywords": ["node", "express", "scraper"],
+  "scripts": {
+    "start": "node scraper2.js"
+  },
+  "env": {
+    "PORT": {
+      "description": "Port number Heroku will use",
+      "value": "3000"
+    }
+  }
+}
