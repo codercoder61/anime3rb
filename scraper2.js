@@ -1,17 +1,17 @@
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
-
+const fetch = require('node-fetch');
 let connection;
 
+
+
 const pool = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "root",
-  database: "anime",
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  host: process.env.MYSQLHOST,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
+  port: process.env.MYSQLPORT,
 });
 
 
@@ -40,26 +40,20 @@ app.get("/image-proxy", async (req, res) => {
 
 let browser;
 
-(async () => {
+app.listen(PORT, "0.0.0.0", async () => {
+  console.log(`Server running on port ${PORT}`);
+
   try {
     browser = await puppeteer.launch({
-  headless: true,
-  args: ['--no-sandbox', '--disable-setuid-sandbox'],
-});
-
-    console.log('✅ Puppeteer browser launched');
-
-const PORT = process.env.PORT || 3000;
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Server running on port ${PORT}`);
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 
-
+    console.log('✅ Puppeteer browser launched');
   } catch (err) {
-    console.error('❌ Failed to launch Puppeteer:', err);
-    process.exit(1);
+    console.error('❌ Puppeteer failed:', err);
   }
-})();
+});
 
 
 // Helper to open a new page with common setup
