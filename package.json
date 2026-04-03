@@ -15,7 +15,6 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "mysql2": "^3.16.3",
-    "node-fetch": "^3.3.2",
     "puppeteer-core": "^10.4.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2"
